@@ -1,9 +1,9 @@
 from flask import Flask, jsonify, render_template, request
-from cipher.caesar import CaesarCipher
-from cipher.vigenere import VigenereCipher
-from cipher.playfair import PlayFairCipher
-from cipher.railfence import RailFenceCipher
-from cipher.Transposition import TranspositionCipher
+from lab_02.cipher.caesar import CaesarCipher
+from lab_02.cipher.vigenere import VigenereCipher
+from lab_02.cipher.playfair import PlayFairCipher
+from lab_02.cipher.railfence import RailFenceCipher
+from lab_02.cipher.Transposition import TranspositionCipher
 
 app = Flask(__name__)
 
