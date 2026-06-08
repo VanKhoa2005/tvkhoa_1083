@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file '.\ui\caesar.ui'
+# Form implementation generated from reading ui file '.\uis\ceasar.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.11
 #
@@ -10,6 +10,9 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
+import os
+
+os.environ['QT_QPA_PLATFORM_PLUGIN_PATH'] = "../platforms"
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -34,7 +37,7 @@ class Ui_MainWindow(object):
         self.label_3 = QtWidgets.QLabel(self.centralwidget)
         self.label_3.setGeometry(QtCore.QRect(20, 200, 47, 13))
         self.label_3.setObjectName("label_3")
-        self.txt_key = QtWidgets.QTextEdit(self.centralwidget)
+        self.txt_key = QtWidgets.QLineEdit(self.centralwidget)
         self.txt_key.setGeometry(QtCore.QRect(80, 190, 381, 31))
         self.txt_key.setObjectName("txt_key")
         self.label_4 = QtWidgets.QLabel(self.centralwidget)

@@ -1,9 +1,9 @@
 from flask import Flask, jsonify, render_template, request
-from lab_02.cipher.caesar import CaesarCipher
-from lab_02.cipher.vigenere import VigenereCipher
-from lab_02.cipher.playfair import PlayFairCipher
-from lab_02.cipher.railfence import RailFenceCipher
-from lab_02.cipher.Transposition import TranspositionCipher
+from cipher.caesar import CaesarCipher
+from cipher.vigenere import VigenereCipher
+from cipher.playfair import PlayFairCipher
+from cipher.railfence import RailFenceCipher
+from cipher.Transposition import TranspositionCipher
 
 app = Flask(__name__)
 
@@ -22,7 +22,11 @@ def caesar_encrypt():
     key = int(request.form['inputKeyPlain'])
     caesar = CaesarCipher()
     encrypted_text = caesar.encrypt_text(text, key)
-    return f"text: {text}<br>/key: {key}<br>/encrypted text: {encrypted_text}"
+    return jsonify({
+        "status": "success",
+        "key": key,
+        "result": encrypted_text
+    })
 
 @app.route("/caesar/decrypt", methods=['POST'])
 def caesar_decrypt():
@@ -30,7 +34,11 @@ def caesar_decrypt():
     key = int(request.form['inputKeyCipher'])
     caesar = CaesarCipher()
     decrypted_text = caesar.decrypt_text(text, key)
-    return f"text: {text}<br>/key: {key}<br>/decrypted text: {decrypted_text}"
+    return jsonify({
+        "status": "success",
+        "key": key,
+        "result": decrypted_text
+    })
 
 
 # --------------------- ROUTES VIGENERE ---------------------
@@ -44,7 +52,11 @@ def vigenere_encrypt():
     key = request.form['inputKeyPlain']
     vigenere = VigenereCipher()
     encrypted_text = vigenere.encrypt_text(text, key)
-    return f"text: {text}<br>/key: {key}<br>/encrypted text: {encrypted_text}"
+    return jsonify({
+        "status": "success",
+        "key": key,
+        "result": encrypted_text
+    })
 
 @app.route("/vigenere/decrypt", methods=['POST'])
 def vigenere_decrypt():
@@ -52,7 +64,11 @@ def vigenere_decrypt():
     key = request.form['inputKeyCipher']
     vigenere = VigenereCipher()
     decrypted_text = vigenere.decrypt_text(text, key)
-    return f"text: {text}<br>/key: {key}<br>/decrypted text: {decrypted_text}"
+    return jsonify({
+        "status": "success",
+        "key": key,
+        "result": decrypted_text
+    })
 
 
 # --------------------- ROUTES PLAYFAIR ---------------------
@@ -74,7 +90,12 @@ def playfair_encrypt():
     playfair_cipher = PlayFairCipher()
     playfair_matrix = playfair_cipher.create_playfair_matrix(key)
     encrypted_text = playfair_cipher.playfair_encrypt(text, playfair_matrix)
-    return f"text: {text}<br>/key: {key}<br>/encrypted text: {encrypted_text}"
+    return jsonify({
+        "status": "success",
+        "key": key,
+        "result": encrypted_text,
+        "matrix": playfair_matrix
+    })
 
 @app.route("/playfair/decrypt", methods=['POST'])
 def playfair_decrypt():
@@ -83,7 +104,12 @@ def playfair_decrypt():
     playfair_cipher = PlayFairCipher()
     playfair_matrix = playfair_cipher.create_playfair_matrix(key)
     decrypted_text = playfair_cipher.playfair_decrypt(text, playfair_matrix)
-    return f"text: {text}<br>/key: {key}<br>/decrypted text: {decrypted_text}"
+    return jsonify({
+        "status": "success",
+        "key": key,
+        "result": decrypted_text,
+        "matrix": playfair_matrix
+    })
 
 
 # --------------------- ROUTES RAILFENCE ---------------------
@@ -97,7 +123,11 @@ def railfence_encrypt():
     key = int(request.form['inputKeyPlain'])
     railfence = RailFenceCipher()
     encrypted_text = railfence.rail_fence_encrypt(text, key)
-    return f"text: {text}<br>/key: {key}<br>/encrypted text: {encrypted_text}"
+    return jsonify({
+        "status": "success",
+        "key": key,
+        "result": encrypted_text
+    })
 
 @app.route("/railfence/decrypt", methods=['POST'])
 def railfence_decrypt():
@@ -105,7 +135,11 @@ def railfence_decrypt():
     key = int(request.form['inputKeyCipher'])
     railfence = RailFenceCipher()
     decrypted_text = railfence.rail_fence_decrypt(text, key)
-    return f"text: {text}<br>/key: {key}<br>/decrypted text: {decrypted_text}"
+    return jsonify({
+        "status": "success",
+        "key": key,
+        "result": decrypted_text
+    })
 
 
 # --------------------- ROUTES TRANSPOSITION ---------------------
@@ -119,7 +153,11 @@ def transposition_encrypt():
     key = int(request.form['inputKeyPlain'])  
     transposition = TranspositionCipher()
     encrypted_text = transposition.encrypt(text, key)
-    return f"text: {text}<br>/key: {key}<br>/encrypted text: {encrypted_text}"
+    return jsonify({
+        "status": "success",
+        "key": key,
+        "result": encrypted_text
+    })
 
 @app.route("/transposition/decrypt", methods=['POST'])
 def transposition_decrypt():
@@ -127,7 +165,11 @@ def transposition_decrypt():
     key = int(request.form['inputKeyCipher'])  
     transposition = TranspositionCipher()
     decrypted_text = transposition.decrypt(text, key)
-    return f"text: {text}<br>/key: {key}<br>/decrypted text: {decrypted_text}"
+    return jsonify({
+        "status": "success",
+        "key": key,
+        "result": decrypted_text
+    })
 
 
 # --------------------- MAIN FUNCTION ---------------------
