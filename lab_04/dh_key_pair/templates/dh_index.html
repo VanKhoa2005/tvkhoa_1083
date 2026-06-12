@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SecureChat - Trò chuyện bảo mật</title>
+    <title>DH-Chat - Trò chuyện bảo mật Diffie-Hellman</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dh_style.css') }}">
 </head>
 <body>
 
@@ -15,9 +15,9 @@
     <div id="login-screen" class="login-screen">
         <div class="login-card">
             <div class="login-logo">
-                <div class="logo-circle">💬</div>
-                <h1>SecureChat</h1>
-                <p>Nhắn tin bảo mật đầu cuối qua mã hóa AES-RSA</p>
+                <div class="logo-circle">🔐</div>
+                <h1>DH-Chat</h1>
+                <p>Trao đổi khóa Diffie-Hellman + Mã hóa AES-128-CBC</p>
             </div>
             <form id="connect-form">
                 <div class="input-group">
@@ -26,17 +26,18 @@
                 </div>
                 <div id="connecting-status" class="connecting-status hidden">
                     <div class="spinner"></div>
-                    <span id="connecting-text">Đang thiết lập kết nối bảo mật...</span>
+                    <span id="connecting-text">Đang khởi tạo...</span>
+                </div>
+                <div class="progress-wrap hidden" id="progress-wrap">
+                    <div class="progress-bar" id="progress-bar"></div>
                 </div>
                 <div id="connect-error" class="error-msg hidden"></div>
-                <button type="submit" id="btn-connect">
-                    Bắt đầu trò chuyện →
-                </button>
+                <button type="submit" id="btn-connect">Bắt đầu trò chuyện →</button>
             </form>
             <div class="login-footer">
-                <span>🔒 AES-128-CBC</span>
+                <span>🔑 Diffie-Hellman 2048-bit</span>
                 <span>•</span>
-                <span>RSA-2048</span>
+                <span>AES-128-CBC</span>
                 <span>•</span>
                 <span>Socket TCP</span>
             </div>
@@ -45,15 +46,14 @@
 
     <!-- MÀN HÌNH CHAT CHÍNH -->
     <div id="chat-screen" class="chat-screen hidden">
-        <!-- THANH TIÊU ĐỀ -->
         <header class="chat-header">
             <div class="chat-header-left">
-                <div class="header-avatar">💬</div>
+                <div class="header-avatar">🔐</div>
                 <div class="header-info">
-                    <h2>Phòng chat công cộng</h2>
-                    <div id="header-status" class="header-status connecting">
+                    <h2>Phòng Chat DH-AES</h2>
+                    <div id="header-status" class="header-status connected">
                         <span class="status-dot"></span>
-                        <span id="status-text">Đang kết nối...</span>
+                        <span id="status-text">Đã kết nối</span>
                     </div>
                 </div>
             </div>
@@ -66,24 +66,15 @@
             </div>
         </header>
 
-        <!-- VÙNG TIN NHẮN -->
         <main id="messages-area" class="messages-area">
             <div class="welcome-bubble">
-                <span>Chào mừng đến với SecureChat 🎉</span>
+                <span>Chào mừng đến DH-Chat! Khóa AES đã được thoả thuận qua DH 🔐</span>
             </div>
         </main>
 
-        <!-- THANH NHẬP LIỆU -->
         <footer class="chat-footer">
             <form id="chat-form" class="message-form">
-                <input 
-                    type="text" 
-                    id="message-input" 
-                    placeholder="Nhập tin nhắn..." 
-                    autocomplete="off" 
-                    disabled
-                    maxlength="500"
-                >
+                <input type="text" id="message-input" placeholder="Nhập tin nhắn..." autocomplete="off" disabled maxlength="500">
                 <button type="submit" id="btn-send" disabled class="send-button">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                         <line x1="22" y1="2" x2="11" y2="13"></line>
@@ -94,6 +85,6 @@
         </footer>
     </div>
 
-    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/dh_app.js') }}"></script>
 </body>
 </html>

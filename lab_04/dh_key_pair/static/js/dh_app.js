@@ -3,27 +3,28 @@ let clientId = '';
 let username = '';
 let eventSource = null;
 
-// DOM Elements
-const loginScreen    = document.getElementById('login-screen');
-const chatScreen     = document.getElementById('chat-screen');
-const connectForm    = document.getElementById('connect-form');
-const usernameInput  = document.getElementById('username-input');
-const btnConnect     = document.getElementById('btn-connect');
-const connectError   = document.getElementById('connect-error');
-const connectingStatus = document.getElementById('connecting-status');
-const connectingText = document.getElementById('connecting-text');
+// DOM
+const loginScreen       = document.getElementById('login-screen');
+const chatScreen        = document.getElementById('chat-screen');
+const connectForm       = document.getElementById('connect-form');
+const usernameInput     = document.getElementById('username-input');
+const btnConnect        = document.getElementById('btn-connect');
+const connectError      = document.getElementById('connect-error');
+const connectingStatus  = document.getElementById('connecting-status');
+const connectingText    = document.getElementById('connecting-text');
+const progressWrap      = document.getElementById('progress-wrap');
+const progressBar       = document.getElementById('progress-bar');
 
-const headerStatus   = document.getElementById('header-status');
-const statusText     = document.getElementById('status-text');
-const headerUsername = document.getElementById('header-username');
+const headerStatus      = document.getElementById('header-status');
+const statusText        = document.getElementById('status-text');
+const headerUsername    = document.getElementById('header-username');
 
-const messagesArea   = document.getElementById('messages-area');
-const chatForm       = document.getElementById('chat-form');
-const messageInput   = document.getElementById('message-input');
-const btnSend        = document.getElementById('btn-send');
-const btnDisconnect  = document.getElementById('btn-disconnect');
+const messagesArea      = document.getElementById('messages-area');
+const chatForm          = document.getElementById('chat-form');
+const messageInput      = document.getElementById('message-input');
+const btnSend           = document.getElementById('btn-send');
+const btnDisconnect     = document.getElementById('btn-disconnect');
 
-// Tạo UUID ngẫu nhiên
 function generateUUID() {
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
         const r = Math.random() * 16 | 0;
@@ -31,38 +32,31 @@ function generateUUID() {
     });
 }
 
-// Lấy giờ hiện tại dạng HH:MM
 function getTime() {
     return new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
 }
 
-// Thêm tin nhắn vào vùng chat
 function addMessage(sender, text, isOutgoing) {
     const group = document.createElement('div');
     group.className = `msg-group ${isOutgoing ? 'outgoing' : 'incoming'}`;
-
     if (!isOutgoing) {
-        const senderEl = document.createElement('div');
-        senderEl.className = 'msg-sender';
-        senderEl.textContent = sender;
-        group.appendChild(senderEl);
+        const s = document.createElement('div');
+        s.className = 'msg-sender';
+        s.textContent = sender;
+        group.appendChild(s);
     }
-
-    const bubble = document.createElement('div');
-    bubble.className = 'msg-bubble';
-    bubble.textContent = text;
-    group.appendChild(bubble);
-
-    const time = document.createElement('div');
-    time.className = 'msg-time';
-    time.textContent = getTime();
-    group.appendChild(time);
-
+    const b = document.createElement('div');
+    b.className = 'msg-bubble';
+    b.textContent = text;
+    group.appendChild(b);
+    const t = document.createElement('div');
+    t.className = 'msg-time';
+    t.textContent = getTime();
+    group.appendChild(t);
     messagesArea.appendChild(group);
     messagesArea.scrollTop = messagesArea.scrollHeight;
 }
 
-// Thêm thông báo hệ thống
 function addSysMsg(text) {
     const el = document.createElement('div');
     el.className = 'sys-msg';
@@ -71,11 +65,11 @@ function addSysMsg(text) {
     messagesArea.scrollTop = messagesArea.scrollHeight;
 }
 
-// Đặt lại giao diện
 function resetUI() {
     loginScreen.classList.remove('hidden');
     chatScreen.classList.add('hidden');
     connectingStatus.classList.add('hidden');
+    progressWrap.classList.add('hidden');
     connectError.classList.add('hidden');
     btnConnect.disabled = false;
     usernameInput.disabled = false;
@@ -97,55 +91,62 @@ connectForm.addEventListener('submit', e => {
     usernameInput.disabled = true;
     connectError.classList.add('hidden');
     connectingStatus.classList.remove('hidden');
-    connectingText.textContent = 'Đang tạo cặp khóa RSA-2048...';
+    progressWrap.classList.remove('hidden');
+    connectingText.textContent = 'Đang kết nối tới máy chủ DH...';
 
     const url = `/stream?username=${encodeURIComponent(username)}&client_id=${encodeURIComponent(clientId)}`;
     eventSource = new EventSource(url);
 
-    // Bắt tay — chỉ cập nhật text chỉ trạng thái
-    eventSource.addEventListener('handshake', e => {
+    // Cập nhật tiến trình bắt tay DH
+    eventSource.addEventListener('status', e => {
         const d = JSON.parse(e.data);
-        connectingText.textContent = d.status;
-        if (d.progress === 100) {
-            // Chuyển sang màn hình chat
+        connectingText.textContent = d.msg;
+        if (d.progress) progressBar.style.width = d.progress + '%';
+    });
+
+    // Bắt tay hoàn tất → vào phòng chat
+    eventSource.addEventListener('ready', e => {
+        const d = JSON.parse(e.data);
+        connectingText.textContent = d.msg;
+        progressBar.style.width = '100%';
+
+        setTimeout(() => {
             loginScreen.classList.add('hidden');
             chatScreen.classList.remove('hidden');
             headerUsername.textContent = username;
             headerStatus.className = 'header-status connected';
-            statusText.textContent = 'Đã kết nối – Mã hóa AES-128-CBC';
+            statusText.textContent = 'Đã kết nối – DH + AES-128-CBC';
             messageInput.disabled = false;
             btnSend.disabled = false;
             messageInput.focus();
-            addSysMsg(`Chào mừng ${username}! Bạn đã vào phòng chat bảo mật.`);
-        }
+            addSysMsg(`Chào mừng ${username}! Khóa AES đã thoả thuận qua Diffie-Hellman.`);
+        }, 500);
     });
 
-    // Nhận tin nhắn từ người khác
+    // Nhận tin nhắn
     eventSource.addEventListener('message', e => {
         const d = JSON.parse(e.data);
         addMessage(d.sender, d.text, false);
     });
 
-    // Lỗi phiên
-    eventSource.addEventListener('error', e => {
-        let msg = 'Không thể kết nối. Vui lòng kiểm tra server.';
-        try { msg = JSON.parse(e.data).message || msg; } catch (_) {}
-        connectingStatus.classList.add('hidden');
-        connectError.textContent = msg;
-        connectError.classList.remove('hidden');
-        btnConnect.disabled = false;
-        usernameInput.disabled = false;
-        connectingText.textContent = '';
-        if (eventSource) { eventSource.close(); eventSource = null; }
-    });
-
-    // Trạng thái hệ thống
-    eventSource.addEventListener('status', e => {
+    // Thông báo hệ thống trong chat
+    eventSource.addEventListener('status_chat', e => {
         const d = JSON.parse(e.data);
         addSysMsg(d.message);
     });
 
-    // Không cần xử lý gì thêm cho handshake keys, server_pub, aes_key, ping
+    // Lỗi
+    eventSource.addEventListener('error', e => {
+        let msg = 'Không thể kết nối. Hãy kiểm tra dh_server.py đang chạy trên cổng 12346.';
+        try { msg = JSON.parse(e.data).message || msg; } catch (_) {}
+        connectingStatus.classList.add('hidden');
+        progressWrap.classList.add('hidden');
+        connectError.textContent = msg;
+        connectError.classList.remove('hidden');
+        btnConnect.disabled = false;
+        usernameInput.disabled = false;
+        if (eventSource) { eventSource.close(); eventSource = null; }
+    });
 });
 
 // Gửi tin nhắn
@@ -162,7 +163,7 @@ chatForm.addEventListener('submit', e => {
     })
     .then(r => r.json())
     .then(d => {
-        if (d.success) {
+        if (d.ok) {
             addMessage(username, text, true);
         } else {
             addSysMsg(`Lỗi gửi: ${d.error}`);
@@ -180,7 +181,6 @@ btnDisconnect.addEventListener('click', () => {
     }).finally(resetUI);
 });
 
-// Tự ngắt khi đóng tab
 window.addEventListener('beforeunload', () => {
     if (clientId) navigator.sendBeacon('/disconnect', JSON.stringify({ client_id: clientId }));
 });
