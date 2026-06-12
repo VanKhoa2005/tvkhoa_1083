@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CypherChat - Phòng Chat Bảo Mật AES-RSA Socket</title>
+    <!-- Fonts chữ Modern -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Style chính -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="cyber-grid-background"></div>
+
+    <div class="app-container">
+        <!-- HEADER CHÍNH -->
+        <header class="app-header">
+            <div class="logo">
+                <span class="logo-icon">🛡️</span>
+                <h1>CYPHER<span>CHAT</span></h1>
+            </div>
+            <div class="header-badges">
+                <span class="crypto-badge">RSA-2048</span>
+                <span class="crypto-badge">AES-128-CBC</span>
+            </div>
+            <div class="header-status">
+                <span id="connection-indicator" class="indicator disconnected"></span>
+                <span id="connection-status-text">Đã ngắt kết nối</span>
+            </div>
+        </header>
+
+        <!-- MÀN HÌNH ĐĂNG NHẬP / KẾT NỐI -->
+        <section id="connection-screen" class="glass-card fade-in">
+            <div class="card-header">
+                <h2>Cổng Kết Nối Bảo Mật</h2>
+                <p>Khởi chạy kênh truyền mật mã học bảo mật thông qua bắt tay khóa RSA & AES.</p>
+            </div>
+            <div class="card-body">
+                <form id="connect-form">
+                    <div class="form-group">
+                        <label for="username-input">Tên người dùng</label>
+                        <input type="text" id="username-input" placeholder="Ví dụ: Alice, Bob..." required autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <label for="server-address">Địa chỉ Máy chủ Socket</label>
+                        <input type="text" id="server-address" value="localhost:12345" disabled>
+                    </div>
+                    <button type="submit" id="btn-connect" class="cyber-btn">
+                        <span>THIẾT LẬP KẾT NỐI BẢO MẬT</span>
+                    </button>
+                </form>
+                <div id="connect-error" class="error-msg hidden"></div>
+            </div>
+        </section>
+
+        <!-- BẢNG ĐIỀU KHIỂN CHÍNH (ẨN KHI KHỞI ĐỘNG) -->
+        <main id="chat-dashboard" class="dashboard-grid hidden">
+            <!-- CỘT TRÁI: LOGS BẮT TAY & THƯ MỤC KHÓA -->
+            <section class="dashboard-sidebar flex-col gap-4">
+                
+                <!-- Bảng Console Bắt tay -->
+                <div class="glass-card crypto-log-card">
+                    <div class="card-header border-b">
+                        <h3>Bắt Tay Mật Mã Học</h3>
+                        <span id="handshake-progress-num">0%</span>
+                    </div>
+                    <div class="progress-bar-container">
+                        <div id="handshake-progress-bar" class="progress-bar" style="width: 0%"></div>
+                    </div>
+                    <div class="card-body crypto-console-body">
+                        <div id="crypto-logs" class="console-logs">
+                            <div class="log-entry system">Đang chờ khởi tạo kết nối bảo mật...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Thư mục Khóa -->
+                <div class="glass-card keys-card">
+                    <div class="card-header border-b">
+                        <h3>Danh Bạ Khóa Bảo Mật</h3>
+                    </div>
+                    <div class="card-body keys-body">
+                        <!-- Khóa Công Khai Client -->
+                        <div class="key-section">
+                            <button class="key-toggle" onclick="toggleAccordion('client-pub-container')">
+                                🔑 Khóa công khai RSA của Client (PEM) <span class="arrow">▼</span>
+                            </button>
+                            <div id="client-pub-container" class="key-container accordion-content hidden">
+                                <pre id="client-public-key" class="key-display">Đang tạo...</pre>
+                            </div>
+                        </div>
+
+                        <!-- Khóa Bí Mật Client -->
+                        <div class="key-section">
+                            <button class="key-toggle" onclick="toggleAccordion('client-priv-container')">
+                                🔑 Khóa bí mật RSA của Client (PEM) <span class="arrow">▼</span>
+                            </button>
+                            <div id="client-priv-container" class="key-container accordion-content hidden">
+                                <pre id="client-private-key" class="key-display text-red">Đang tạo...</pre>
+                            </div>
+                        </div>
+
+                        <!-- Khóa Công Khai Server -->
+                        <div class="key-section">
+                            <button class="key-toggle" onclick="toggleAccordion('server-pub-container')">
+                                🔑 Khóa công khai RSA của Server (PEM) <span class="arrow">▼</span>
+                            </button>
+                            <div id="server-pub-container" class="key-container accordion-content hidden">
+                                <pre id="server-public-key" class="key-display">Đang chờ trao đổi...</pre>
+                            </div>
+                        </div>
+
+                        <!-- Khóa Phiên AES -->
+                        <div class="key-section active-aes">
+                            <div class="aes-key-header">
+                                <span class="key-icon">🔐</span>
+                                <div>
+                                    <span class="label">Khóa đối xứng AES (Khóa phiên)</span>
+                                    <div class="aes-badge">AES-128-CBC</div>
+                                </div>
+                            </div>
+                            <div class="aes-key-box">
+                                <code id="aes-session-key">Đang chờ bắt tay bảo mật...</code>
+                                <button id="btn-toggle-aes" class="icon-btn hidden" onclick="toggleAESVisibility()">👁️</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- CỘT PHẢI: PHÒNG CHAT BẢO MẬT & XEM TRƯỚC MÃ HÓA -->
+            <section class="dashboard-main flex-col gap-4">
+                
+                <!-- Hộp Chat -->
+                <div class="glass-card chat-card flex-col flex-1">
+                    <div class="card-header border-b chat-header">
+                        <div class="user-info">
+                            <span class="avatar">💬</span>
+                            <div>
+                                <h3 id="chat-title">Phòng Chat Bảo Mật</h3>
+                                <span class="subtext">Kênh Truyền Mã Hóa Đầu-Đến-Server</span>
+                            </div>
+                        </div>
+                        <button id="btn-disconnect" class="disconnect-btn">Ngắt kết nối</button>
+                    </div>
+                    
+                    <div id="chat-messages" class="card-body chat-messages-container flex-1">
+                        <div class="system-message">
+                            <span class="sys-badge">HỆ THỐNG</span>
+                            Chào mừng đến với CypherChat. Kênh mã hóa đã sẵn sàng.
+                        </div>
+                    </div>
+
+                    <!-- Trình xem trước mã hóa AES CBC -->
+                    <div id="encryption-preview" class="encryption-preview border-t">
+                        <div class="preview-header">
+                            <span>⚡ Bộ Phân Tích Mã Hóa AES CBC (Thời Gian Thực)</span>
+                            <span class="preview-mode">Khối đệm PKCS#7</span>
+                        </div>
+                        <div class="preview-stats">
+                            <div>Kích thước: <span id="preview-length" class="highlight">0</span> byte</div>
+                            <div>Cần đệm (Padding): <span id="preview-pad" class="highlight">16</span> byte</div>
+                            <div>Kích thước sau đệm: <span id="preview-blocks" class="highlight">1</span> khối (16B/khối)</div>
+                        </div>
+                        <div class="preview-formula">
+                            <code>Bản rõ ➡️ Bản rõ đã đệm (PKCS#7) ➡️ Mã hóa AES-CBC ➡️ IV (16B) + Bản mã (Ciphertext)</code>
+                        </div>
+                    </div>
+
+                    <!-- Thanh Nhập Tin nhắn -->
+                    <div class="chat-input-container border-t">
+                        <form id="chat-form" class="chat-form">
+                            <input type="text" id="message-input" placeholder="Nhập nội dung tin nhắn cần mã hóa và gửi đi..." autocomplete="off" disabled>
+                            <button type="submit" id="btn-send" class="send-btn" disabled>Gửi đi ✉️</button>
+                        </form>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Script chính -->
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
